@@ -1,0 +1,4 @@
+name = Dining Menus
+description = Code to get dining menus into dining building nodes
+core = 7.x
+package = OnCampus

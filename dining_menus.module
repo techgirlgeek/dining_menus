@@ -1,0 +1,152 @@
+<?php
+
+/**
+ * @file
+ * dining menu blocks functionality
+ */
+
+/**
+ * Implements hook_block_info().
+ */
+function dining_menus_block_info() {
+  $blocks['daily'] = array(
+    'info' => t('Dining menus - Daily'),
+    'cache' => DRUPAL_NO_CACHE,
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'dining/*',
+  );
+
+  $blocks['weekly'] = array(
+    'info' => t('Dining menus - Weekly'),
+    'cache' => DRUPAL_NO_CACHE,
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'dining/*',
+  );
+
+  $blocks['menus'] = array(
+    'info' => t('Dining menu links'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+    'pages' => 'dining/*',
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * This hook generates the contents of the blocks themselves.
+ */
+function dining_menus_block_view($delta = '') {
+  $dining_building_path = $GLOBALS['_SERVER']['REQUEST_URI'];
+  $document_root = $GLOBALS['_SERVER']['DOCUMENT_ROOT'];
+
+  switch ($delta) {
+    case 'daily':
+      $block['subject'] = '<a name="daily"></a>' . dining_menus_get_title($dining_building_path) . '<br />' . date('F d, Y') . '<br />' . 'Daily Menu';
+      $block['content'] = dining_menus_daily_menu($dining_building_path, $document_root);
+    break;
+
+    case 'weekly':
+      $block['subject'] = '<a name="weekly"></a>' . t('Weekly Menu');
+      $block['content'] = dining_menus_weekly_menu($dining_building_path, $document_root);
+    break;
+
+    case 'menus':
+      $block['subject'] = '<h3>' . t('Jump to menus for ') . dining_menus_get_title($dining_building_path) . '</h3>';
+      $block['content'] = dining_menus_menu();
+    break;
+
+  }
+
+  return $block;
+}
+
+function dining_menus_menu() {
+  $menu = '';
+  $menu = '<ul>';
+  $menu .= '<li>' . l('Daily Menu', '', array('fragment' => 'daily', 'external' => TRUE)) . '</li>';
+  $menu .= '<li>' . l('Weekly Menu', '', array('fragment' => 'weekly', 'external' => TRUE)) . '</li>';
+  $menu .= '</ul>';
+
+  return $menu;
+}
+
+// Get the name of the dining facility
+function dining_menus_get_title($dining_building_path) {
+
+  switch ($dining_building_path) {
+    case '/dining/sewall-hall':
+      $dining_hall = 'Sewall Hall';
+    break;
+
+    case '/dining/darley-commons':
+      $dining_hall = 'Darley Commons';
+    break;
+
+    case '/dining/libby-hall':
+      $dining_hall = 'Libby Hall';
+    break;
+
+    case '/dining/center-community':
+      $dining_hall = 'Center for Community';
+    break;
+
+    case '/dining/emporiumfarrand':
+      $dining_hall = 'Farrand Hall';
+    break;
+
+    default:
+      $dining_hall = '';
+    break;
+  }
+
+  return $dining_hall;
+
+}
+
+// Get today's menu
+function dining_menus_daily_menu($dining_building_path, $document_root) {
+
+  $footnote = '<br /><span class="menu_footnote">' . t('Hot Cereal and bagels are available every morning at breakfast/brunch. Beverages and fruit are available at every meal. A full salad bar is available at every lunch & dinner. Menus are subject to change based on market conditions and product availability. <br />
+* <strong>Denotes Vegan Items</strong>') . '</span>';
+
+  switch ($dining_building_path) {
+
+    case '/dining/sewall-hall':
+    case '/dining/darley-commons':
+      return $footnote . file_get_contents($document_root . '/sites/default/files/menus/day_menu_list_v3.html');
+    break;
+
+    case '/dining/libby-hall':
+    case '/dining/emporiumfarrand':
+      return $footnote . file_get_contents($document_root . '/sites/default/files/menus/day_menu_list_v4.html');
+    break;
+
+    case '/dining/center-community':
+      return '<object data="/sites/default/files/menus/dining_menu.pdf" type="application/pdf" width="100%" height="1062px">
+
+          <p>If you do not see the menu here, you can ' . l('click here to download the PDF.', 'sites/default/files/menus/dining_menu.pdf', array('attributes' => array('target' => '_blank', 'class' => 'c4c_menu'))) . '</p>
+        </object>';
+    break;
+
+  }
+
+}
+
+// Get weekly menus for the dining halls
+function dining_menus_weekly_menu($dining_building_path, $document_root) {
+
+  switch ($dining_building_path) {
+    case '/dining/sewall-hall':
+    case '/dining/darley-commons':
+      return file_get_contents($document_root . '/sites/default/files/menus/week_menu_table_v3.html');
+    break;
+
+    case '/dining/libby-hall':
+    case '/dining/emporiumfarrand':
+      return file_get_contents($document_root . '/sites/default/files/menus/week_menu_table_v4.html');
+    break;
+  }
+
+}
